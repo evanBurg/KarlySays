@@ -4,12 +4,21 @@ import Quotes from "./quotes.json";
 import { motion, AnimatePresence } from "framer-motion";
 
 const fonts = [
-  "'Butterfly Kids', cursive",
   "'Indie Flower', cursive",
   "'Pacifico', cursive",
-  "'Shadows Into Light', cursive",
-  "'Cookie', cursive",
-  "'Gloria Hallelujah', cursive"
+  "'Amatic SC', cursive",
+  "'Permanent Marker', cursive",
+  "'Courgette', cursive",
+  "'Gloria Hallelujah', cursive",
+  "'Patrick Hand', cursive",
+  "'Neucha', cursive",
+  "'Gochi Hand', cursive",
+  "'Architects Daughter', cursive",
+  "'Shadows Into Light Two', cursive",
+  "'Rock Salt', cursive",
+  "'Covered By Your Grace', cursive",
+  "'Pangolin', cursive",
+  "'Berkshire Swash', cursive"
 ];
 
 window.album = {
