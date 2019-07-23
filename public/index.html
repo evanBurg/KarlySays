@@ -4,7 +4,15 @@
     <meta charset="utf-8" />
     <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="https://fonts.googleapis.com/css?family=Butterfly+Kids|Cookie|Gloria+Hallelujah|Indie+Flower|Pacifico|Shadows+Into+Light&display=swap"
+      rel="stylesheet"
+    />
     <meta name="theme-color" content="#000000" />
+    <meta
+      name="google-signin-client_id"
+      content="795413336079-u5lo5qfp8cror7k58lh6uei4f52c4mqp.apps.googleusercontent.com"
+    />
     <!--
       manifest.json provides metadata used when your web app is installed on a
       user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
@@ -21,6 +29,115 @@
     -->
     <title>React App</title>
   </head>
+
+  <script src="https://apis.google.com/js/api.js"></script>
+  <script>
+    /**
+     * Sample JavaScript code for photoslibrary.mediaItems.search
+     * See instructions for running APIs Explorer code samples locally:
+     * https://developers.google.com/explorer-help/guides/code_samples#javascript
+     */
+
+    window.randomDate = function randomDate(start, end) {
+      return new Date(
+        start.getTime() + Math.random() * (end.getTime() - start.getTime())
+      );
+    };
+
+    window.authenticate = function authenticate() {
+      return gapi.auth2
+        .getAuthInstance()
+        .signIn({
+          scope:
+            "https://www.googleapis.com/auth/photoslibrary https://www.googleapis.com/auth/photoslibrary.readonly https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata"
+        })
+        .then(
+          function() {
+            console.log("Sign-in successful");
+          },
+          function(err) {
+            console.error("Error signing in", err);
+          }
+        );
+    };
+    window.loadClient = function loadClient() {
+      gapi.client.setApiKey("AIzaSyDALysgxeKwB4DwcaX5Mfoc4TXQGt9BGDo");
+      return gapi.client
+        .load(
+          "https://content.googleapis.com/discovery/v1/apis/photoslibrary/v1/rest"
+        )
+        .then(
+          function() {
+            window.authenticated = true;
+            window.loadAlbum();
+            console.log("GAPI client loaded for API");
+          },
+          function(err) {
+            console.error("Error loading GAPI client for API", err);
+          }
+        );
+    };
+    // Make sure the client is loaded and sign-in is complete before calling this method.
+    window.search = function execute() {
+      return gapi.client.photoslibrary.mediaItems
+        .search({
+          resource: {
+            albumId:
+              "AHMXd8K0ZMnHarIdCL1pfA3lRtgVdugw4yITt14VReFK6WPFfsrr_61LXjiPzNesarDwzLUYzJju",
+            pageSize: 100
+          }
+        })
+        .then(
+          function(response) {
+            // Handle the results here (response.result has the parsed body).
+            console.log("Response", response);
+          },
+          function(err) {
+            console.error("Execute error", err);
+          }
+        );
+    };
+
+    function setSigninStatus() {
+      var user = window.GoogleAuth.currentUser.get();
+      var isAuthorized = user.hasGrantedScopes(
+        "https://www.googleapis.com/auth/photoslibrary https://www.googleapis.com/auth/photoslibrary.readonly https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata"
+      );
+      window.authenticated = isAuthorized;
+
+      if(isAuthorized){
+        window.loadAlbum(() => window.setReactSignIn(isAuthorized));
+      }
+    }
+
+    function updateSigninStatus(isSignedIn) {
+      setSigninStatus();
+    }
+
+    gapi.load("client:auth2", function() {
+      gapi.auth2.init({
+        client_id:
+          "795413336079-u5lo5qfp8cror7k58lh6uei4f52c4mqp.apps.googleusercontent.com"
+      });
+      gapi.client.setApiKey("AIzaSyDALysgxeKwB4DwcaX5Mfoc4TXQGt9BGDo");
+
+      gapi.client
+        .load(
+          "https://content.googleapis.com/discovery/v1/apis/photoslibrary/v1/rest"
+        )
+        .then(function() {
+          window.GoogleAuth = gapi.auth2.getAuthInstance();
+
+          // Listen for sign-in state changes.
+          window.GoogleAuth.isSignedIn.listen(updateSigninStatus);
+
+          // Handle initial sign-in state. (Determine if user is already signed in.)
+          var user = window.GoogleAuth.currentUser.get();
+          setSigninStatus();
+        });
+    });
+  </script>
+
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
