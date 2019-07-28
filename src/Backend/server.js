@@ -22,7 +22,7 @@ app.post("/new", (req, res) => {
 });
 
 app.post("/update", (req, res) => {
-  if (req.body.index && req.body.newQuote) {
+  if (req.body.index !== undefined && req.body.newQuote) {
     let fileQuotes = JSON.parse(fs.readFileSync("./quotes.json"));
     fileQuotes[req.body.index] = req.body.newQuote;
     fs.writeFileSync("./quotes.json", JSON.stringify(fileQuotes, null, 2));
@@ -33,7 +33,7 @@ app.post("/update", (req, res) => {
 });
 
 app.post("/delete", (req, res) => {
-  if (req.body.quote && req.body.index) {
+  if (req.body.index !== undefined) {
     let fileQuotes = JSON.parse(fs.readFileSync("./quotes.json"));
     fileQuotes.splice(req.body.index, 1);
     fs.writeFileSync("./quotes.json", JSON.stringify(fileQuotes, null, 2));
