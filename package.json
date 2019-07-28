@@ -2,6 +2,7 @@
   "name": "karly-says",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://evenburgers.com/karlysays",
   "dependencies": {
     "framer-motion": "^1.2.4",
     "react": "^16.8.6",

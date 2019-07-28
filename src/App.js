@@ -3,6 +3,9 @@ import "./App.css";
 import Quotes from "./quotes.json";
 import { motion, AnimatePresence } from "framer-motion";
 
+const MasterQuotes = JSON.parse(JSON.stringify(Quotes));
+const GetAllQuotes = () => JSON.parse(JSON.stringify(MasterQuotes));
+
 const fonts = [
   "'Indie Flower', cursive",
   "'Pacifico', cursive",
@@ -39,8 +42,10 @@ class Slideshow extends React.Component {
     super(props);
 
     this.state = {
-      quote: this.chooseRandomQuote(),
+      quote: this.chooseRandomQuote(true),
       font: this.chooseRandomFont(),
+      image: this.chooseRandomImage(),
+      availableQuotes: GetAllQuotes(),
       signedIn: false,
       counter: 0,
       transitioning: false,
@@ -52,23 +57,50 @@ class Slideshow extends React.Component {
     };
   }
 
-  chooseRandomQuote = () => Quotes[Math.floor(Math.random() * Quotes.length)];
+  chooseRandomQuote = (initial) => {
+    if(initial){
+      return Quotes[Math.floor(Math.random() * Quotes.length)]
+    }
+
+
+    let {availableQuotes} = this.state;
+    const index = Math.floor(Math.random() * this.state.availableQuotes.length);
+    const quote = availableQuotes[index];
+    availableQuotes.splice(index, 1);
+
+    if(availableQuotes.length === 0){
+      let newQuotes = GetAllQuotes();
+      newQuotes.splice(newQuotes.indexOf(quote), 1);
+      this.setState({
+        availableQuotes: newQuotes
+      })
+    }else{
+      this.setState({
+        availableQuotes
+      });
+    }
+
+    return quote;
+  };
   chooseRandomFont = () => fonts[Math.floor(Math.random() * fonts.length)];
   chooseRandomImage = () =>
     this.props.album[Math.floor(Math.random() * this.props.album.length)];
 
   finishTransition = () => {
     setTimeout(() => {
-      this.setState({
-        ...this.state.transitioningTo,
-        transitioningTo: {
-          quote: "",
-          font: "",
-          image: ""
+      this.setState(
+        {
+          ...this.state.transitioningTo,
+          transitioningTo: {
+            quote: "",
+            font: "",
+            image: ""
+          },
+          transitioning: false,
+          counter: this.state.counter + 1
         },
-        transitioning: false,
-        counter: this.state.counter + 1
-      }, this.setRandomQuote);
+        this.setRandomQuote
+      );
     }, 1000);
   };
 
@@ -76,6 +108,7 @@ class Slideshow extends React.Component {
     var img = new Image();
     img.src = url;
     img.onload = callback;
+    img.onerror = this.setRandomQuote();
   };
 
   setRandomQuote = async () => {
@@ -104,12 +137,12 @@ class Slideshow extends React.Component {
           );
         }
       }
-    }, 5000)
+    }, 10000);
   };
 
   componentDidMount = async () => {
     this.setRandomQuote();
-    setInterval(window.loadAlbum, 1024 * 60 * 5);
+    setInterval(window.loadAlbum, 1000 * 60 * 60 * 3);
   };
 
   image = {
@@ -176,6 +209,7 @@ class Slideshow extends React.Component {
           <AnimatePresence>
             {!this.state.transitioning && (
               <motion.p
+                className="quote"
                 key={`quote-${this.state.counter}`}
                 variants={this.quote}
                 initial="initial"
@@ -188,7 +222,7 @@ class Slideshow extends React.Component {
                   zIndex: 2,
                   whiteSpace: "pre-wrap",
                   textAlign: "center",
-                  fontSize: "6em",
+                  fontSize: "6vh",
                   maxWidth: "80%",
                   maxHeight: "95%",
                   fontFamily: this.state.font
@@ -242,7 +276,7 @@ const Loader = () => (
         cy="50"
         r="39.891"
         stroke="#ffffff"
-        stroke-width="14.4"
+        strokeWidth="14.4"
         fill="none"
         stroke-dasharray="0 300"
       >
@@ -262,7 +296,7 @@ const Loader = () => (
         cy="50"
         r="39.891"
         stroke="#000000"
-        stroke-width="7.2"
+        strokeWidth="7.2"
         fill="none"
         stroke-dasharray="0 300"
       >
@@ -282,7 +316,7 @@ const Loader = () => (
         cy="50"
         r="32.771"
         stroke="#000000"
-        stroke-width="1"
+        strokeWidth="1"
         fill="none"
         stroke-dasharray="0 300"
       >
@@ -302,7 +336,7 @@ const Loader = () => (
         cy="50"
         r="47.171"
         stroke="#000000"
-        stroke-width="1"
+        strokeWidth="1"
         fill="none"
         stroke-dasharray="0 300"
       >
@@ -434,45 +468,31 @@ class App extends React.Component {
     window.loadAlbum = this.getAlbum;
   }
 
-  photoSearch = (filter) => window.gapi.client.photoslibrary.mediaItems.search({resource: filter})
+  photoSearch = filter =>
+    window.gapi.client.photoslibrary.mediaItems.search({ resource: filter });
 
-  getAlbum = callback => {
+  getAlbum = (callback, pageToken) => {
     const reactThis = this;
     reactThis.setLoading(true);
     if (window.authenticated) {
-      let pageToken = true;
-      do{
-        try {
-          this.photoSearch({
-                albumId:"AHMXd8K0ZMnHarIdCL1pfA3lRtgVdugw4yITt14VReFK6WPFfsrr_61LXjiPzNesarDwzLUYzJju",
-                pageSize: 100,
-                pageToken: (pageToken !== true && pageToken !== false) ? pageToken : undefined
-              })
-            .then(
-              function(response) {
-                // Handle the results here (response.result has the parsed body).
-                console.log("Response", response);
+      this.photoSearch({
+        albumId:
+          "AHMXd8K0ZMnHarIdCL1pfA3lRtgVdugw4yITt14VReFK6WPFfsrr_61LXjiPzNesarDwzLUYzJju",
+        pageSize: 100,
+        pageToken: pageToken
+      }).then(function(response) {
+        console.log("Response", response);
 
-                if(response.nextPageToken){
-                  pageToken = response.nextPageToken;
-                }else{
-                  pageToken = false;
-                }
+        reactThis.setState({album: [...reactThis.state.album, ...response.result.mediaItems]});
 
-                reactThis.setState(
-                  { album: [...reactThis.album, ...response.result.mediaItems], loading: false },
-                  callback
-                );
-              },
-              function(err) {
-                console.error("Execute error", err);
-                reactThis.setLoading(false);
-              }
-            );
-        } catch (e) {
-          console.error(e);
+        if(response.result.nextPageToken){
+          reactThis.getAlbum(undefined, response.result.nextPageToken);
+        }else{
+          reactThis.setLoading(false);
+          if(callback)
+            callback();
         }
-      }while(pageToken)
+      });
     }
   };
 
