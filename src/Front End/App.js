@@ -1,10 +1,6 @@
 import React from "react";
 import "./App.css";
-import Quotes from "./quotes.json";
 import { motion, AnimatePresence } from "framer-motion";
-
-const MasterQuotes = JSON.parse(JSON.stringify(Quotes));
-const GetAllQuotes = () => JSON.parse(JSON.stringify(MasterQuotes));
 
 const fonts = [
   "'Indie Flower', cursive",
@@ -45,7 +41,7 @@ class Slideshow extends React.Component {
       quote: this.chooseRandomQuote(true),
       font: this.chooseRandomFont(),
       image: this.chooseRandomImage(),
-      availableQuotes: GetAllQuotes(),
+      availableQuotes:  JSON.parse(JSON.stringify(props.quotes)),
       signedIn: false,
       counter: 0,
       transitioning: false,
@@ -59,7 +55,7 @@ class Slideshow extends React.Component {
 
   chooseRandomQuote = (initial) => {
     if(initial){
-      return Quotes[Math.floor(Math.random() * Quotes.length)]
+      return this.props.quotes[Math.floor(Math.random() * this.props.quotes.length)]
     }
 
 
@@ -69,7 +65,7 @@ class Slideshow extends React.Component {
     availableQuotes.splice(index, 1);
 
     if(availableQuotes.length === 0){
-      let newQuotes = GetAllQuotes();
+      let newQuotes = JSON.parse(JSON.stringify(this.props.quotes));
       newQuotes.splice(newQuotes.indexOf(quote), 1);
       this.setState({
         availableQuotes: newQuotes
@@ -460,7 +456,8 @@ class App extends React.Component {
     this.state = {
       signedIn: false,
       loading: true,
-      album: []
+      album: [],
+      quotes: []
     };
 
     window.setReactSignIn = this.setSignedIn;
@@ -504,6 +501,15 @@ class App extends React.Component {
 
   setLoading = loading => this.setState({ loading });
 
+  componentDidMount = async () => {
+    let res = await fetch("/quotes");
+    if(res.ok){
+      this.setState({
+        quotes: await res.json()
+      })
+    }
+  }
+
   render() {
     if (this.state.loading)
       return (
@@ -526,7 +532,7 @@ class App extends React.Component {
       return <Login setLoading={this.setLoading} />;
     } else {
       return (
-        <Slideshow album={this.state.album} setLoading={this.setLoading} />
+        <Slideshow album={this.state.album} quotes={this.state.quotes} setLoading={this.setLoading} />
       );
     }
   }
