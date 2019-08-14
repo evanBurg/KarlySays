@@ -198,7 +198,7 @@ class Edit extends Component {
   };
 
   refreshQuotes = async () => {
-    let res = await fetch("/quotes");
+    let res = await fetch("/karlysays/quotes");
 
     this.setState({
       quotes: await res.json()
@@ -233,7 +233,7 @@ class Edit extends Component {
 
   updateQuote = async () => {
     let { updatingQuote, newString } = this.state;
-    let res = await fetch("/update", {
+    let res = await fetch("/karlysays/update", {
       method: "POST",
       headers: {
         Accept: "application/json",
@@ -255,7 +255,7 @@ class Edit extends Component {
   };
 
   deleteQuote = async index => {
-    let res = await fetch("/delete", {
+    let res = await fetch("/karlysays/delete", {
       method: "POST",
       headers: {
         Accept: "application/json",
@@ -270,7 +270,7 @@ class Edit extends Component {
   };
 
   createQuote = async () => {
-    let res = await fetch("/new", {
+    let res = await fetch("/karlysays/new", {
       method: "POST",
       headers: {
         Accept: "application/json",

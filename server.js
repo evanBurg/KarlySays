@@ -4,13 +4,21 @@ const bodyParser = require("body-parser");
 const path = require("path");
 const app = express();
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, "build")));
 
-app.get("/ping", function(req, res) {
+const serverRoot = "/karlysays"
+const local = false;
+
+genUrl = (url) => local ? url : `${serverRoot.trim()}${url.trim()}`.trim();
+
+console.log(path.join(__dirname, "build"))
+console.log(genUrl("/"))
+app.use(genUrl("/"), express.static(path.join(__dirname, "build"), ));
+
+app.get(genUrl("/ping"), function(req, res) {
   return res.send("pong");
 });
 
-app.post("/new", (req, res) => {
+app.post(genUrl("/new"), (req, res) => {
   if (req.body.quote) {
     let fileQuotes = JSON.parse(fs.readFileSync("./quotes.json"));
     fileQuotes.push(req.body.quote);
@@ -21,7 +29,7 @@ app.post("/new", (req, res) => {
   res.send({ status: "failure", message: "Must supply quote" });
 });
 
-app.post("/update", (req, res) => {
+app.post(genUrl("/update"), (req, res) => {
   if (req.body.index !== undefined && req.body.newQuote) {
     let fileQuotes = JSON.parse(fs.readFileSync("./quotes.json"));
     fileQuotes[req.body.index] = req.body.newQuote;
@@ -32,7 +40,7 @@ app.post("/update", (req, res) => {
   res.send({ status: "failure", message: "Must supply quote and replacement" });
 });
 
-app.post("/delete", (req, res) => {
+app.post(genUrl("/delete"), (req, res) => {
   if (req.body.index !== undefined) {
     let fileQuotes = JSON.parse(fs.readFileSync("./quotes.json"));
     fileQuotes.splice(req.body.index, 1);
@@ -43,16 +51,17 @@ app.post("/delete", (req, res) => {
   res.send({ status: "failure", message: "Must supply quote" });
 });
 
-app.get("/quotes", (req, res) => {
+app.get(genUrl("/quotes"), (req, res) => {
   res.send(fs.readFileSync("./quotes.json"));
 });
 
-app.get("/", function(req, res) {
+app.get(genUrl("/"), function(req, res) {
   res.sendFile(path.join(__dirname, "build", "index.html"));
 });
 
-app.get("/quotezone", function(req, res) {
+app.get(genUrl("/quotezone"), function(req, res) {
     res.sendFile(path.join(__dirname, "build", "index.html"));
 });
 
-app.listen(process.env.PORT || 8080);
+const PORT = process.env.PORT || 8069
+app.listen(PORT, () => console.log("Listening on port " + PORT + " ..."));

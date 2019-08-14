@@ -248,7 +248,8 @@ class Slideshow extends React.Component {
                     <p>{this.state.quote.text}</p>
                   )}
                 {this.state.quote &&
-                  this.state.quote.hasOwnProperty("author") && this.state.quote.author !== "" (
+                  this.state.quote.hasOwnProperty("author") &&
+                  this.state.quote.author !== "" && (
                     <p>- {this.state.quote.author}</p>
                   )}
               </motion.div>
@@ -529,7 +530,7 @@ class App extends React.Component {
   setLoading = loading => this.setState({ loading });
 
   componentDidMount = async () => {
-    let res = await fetch("/quotes");
+    let res = await fetch("/karlysays/quotes");
     if (res.ok) {
       this.setState({
         quotes: await res.json()

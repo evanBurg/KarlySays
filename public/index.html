@@ -103,7 +103,9 @@
         "https://www.googleapis.com/auth/photoslibrary https://www.googleapis.com/auth/photoslibrary.readonly https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata"
       );
       window.authenticated = isAuthorized;
+      if(window.setReactSignIn)
       window.setReactSignIn(isAuthorized)
+      if(window.setLoading)
       window.setLoading(false)
       if(isAuthorized){
         window.loadAlbum();
