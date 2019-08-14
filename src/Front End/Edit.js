@@ -15,12 +15,33 @@ const CreateCard = props => {
         }}
       >
         <div style={{ marginBottom: 15 }}>
-          <textarea
-            rows="4"
-            cols="50"
-            value={props.value}
-            onChange={props.onChange}
-          />
+        <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              width: "100%",
+              marginBottom: 5
+            }}
+          >
+            <label>Text</label>
+            <textarea
+              style={{ borderRadius: 10, padding: 5 }}
+              rows="4"
+              cols="50"
+              value={props.value}
+              onChange={props.onChange}
+            />
+          </div>
+          <div
+            style={{ display: "flex", flexDirection: "column", width: "100%" }}
+          >
+            <label>Author</label>
+            <input
+              style={{ borderRadius: 10, padding: 5}}
+              value={props.author}
+              onChange={props.onChangeAuthor}
+            />
+          </div>
         </div>
         <div
           style={{
@@ -70,12 +91,33 @@ const QuoteCard = props => {
         }}
       >
         <div style={{ marginBottom: 15 }}>
-          <textarea
-            rows="4"
-            cols="50"
-            value={props.newString}
-            onChange={props.onChange}
-          />
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              width: "100%",
+              marginBottom: 5
+            }}
+          >
+            <label>Text</label>
+            <textarea
+              style={{ borderRadius: 10, padding: 5 }}
+              rows="4"
+              cols="50"
+              value={props.value}
+              onChange={props.onChange}
+            />
+          </div>
+          <div
+            style={{ display: "flex", flexDirection: "column", width: "100%" }}
+          >
+            <label>Author</label>
+            <input
+              style={{ borderRadius: 10, padding: 5 }}
+              value={props.author}
+              onChange={props.onChangeAuthor}
+            />
+          </div>
         </div>
         <div
           style={{
@@ -110,7 +152,8 @@ const QuoteCard = props => {
           flexDirection: "column"
         }}
       >
-        <div style={{ marginBottom: 15 }}>{props.quote}</div>
+        <div style={{ marginBottom: 15 }}>{props.quote.text}</div>
+        {props.quote.hasOwnProperty("author") && props.quote.author !== "" && <div style={{ marginBottom: 15 }}>-{props.quote.author}</div>}
         <div
           style={{
             display: "flex",
@@ -145,6 +188,7 @@ class Edit extends Component {
       quotes: [],
       updatingQuote: null,
       newString: "",
+      newAuthor: "",
       creating: false
     };
   }
@@ -164,19 +208,27 @@ class Edit extends Component {
   setCreating = () => {
     this.setState({
       creating: true,
-      newString: ""
+      newString: "",
+      newAuthor: ""
     });
   };
 
   setUpdateing = index => {
     this.setState({
       updatingQuote: index,
-      newString: this.state.quotes[index]
+      newString: this.state.quotes[index].text,
+      newAuthor: this.state.quotes[index].hasOwnProperty("author")
+        ? this.state.quotes[index].author
+        : ""
     });
   };
 
   updateString = e => {
     this.setState({ newString: e.target.value });
+  };
+
+  updateAuthor = e => {
+    this.setState({ newAuthor: e.target.value });
   };
 
   updateQuote = async () => {
@@ -189,7 +241,10 @@ class Edit extends Component {
       },
       body: JSON.stringify({
         index: updatingQuote,
-        newQuote: newString
+        newQuote: {
+          text: this.state.newString,
+          author: this.state.newAuthor
+        }
       })
     });
 
@@ -216,18 +271,21 @@ class Edit extends Component {
 
   createQuote = async () => {
     let res = await fetch("/new", {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          quote: this.state.newString
-        })
-      });
-  
-      await this.refreshQuotes();
-      this.setState({creating: false})
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        quote: {
+          text: this.state.newString,
+          author: this.state.newAuthor
+        }
+      })
+    });
+
+    await this.refreshQuotes();
+    this.setState({ creating: false });
   };
 
   render() {
@@ -250,14 +308,18 @@ class Edit extends Component {
           setCreating={this.setCreating}
           value={this.state.newString}
           onChange={this.updateString}
+          author={this.state.author}
+          onChangeAuthor={this.updateAuthor}
           submit={this.createQuote}
-          cancel={() => this.setState({creating: false})}
+          cancel={() => this.setState({ creating: false })}
         />
         {this.state.quotes.map((quote, index) => (
           <QuoteCard
+            author={this.state.newAuthor}
+            onChangeAuthor={this.updateAuthor}
             onChange={this.updateString}
             updating={index === this.state.updatingQuote}
-            newString={this.state.newString}
+            value={this.state.newString}
             setUpdating={() => this.setUpdateing(index)}
             submit={this.updateQuote}
             cancel={() => this.setState({ updatingQuote: null })}

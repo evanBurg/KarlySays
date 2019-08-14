@@ -1,6 +1,6 @@
-import React from "react";
 import "./App.css";
 import { motion, AnimatePresence } from "framer-motion";
+import * as React from "react";
 
 const fonts = [
   "'Indie Flower', cursive",
@@ -33,6 +33,23 @@ window.album = {
     "AHMXd8ImhyBppRvAYyjGVcgEKPiuPub7iEFW0Me5SywaK4rPaSMGNKpVJKNtSNTIxbl6kJoJLx0-9T1OcbiO59pNaJ2Xa0OmvA"
 };
 
+const variants = {
+  enter: direction => ({
+    x: direction < 0 ? 1000 : -1000,
+    opacity: 0
+  }),
+  center: {
+    zIndex: 1,
+    x: 0,
+    opacity: 1
+  },
+  exit: direction => ({
+    zIndex: 0,
+    x: direction < 0 ? 1000 : -1000,
+    opacity: 0
+  })
+};
+
 class Slideshow extends React.Component {
   constructor(props) {
     super(props);
@@ -41,7 +58,7 @@ class Slideshow extends React.Component {
       quote: this.chooseRandomQuote(true),
       font: this.chooseRandomFont(),
       image: this.chooseRandomImage(),
-      availableQuotes:  JSON.parse(JSON.stringify(props.quotes)),
+      availableQuotes: JSON.parse(JSON.stringify(props.quotes)),
       signedIn: false,
       counter: 0,
       transitioning: false,
@@ -53,24 +70,25 @@ class Slideshow extends React.Component {
     };
   }
 
-  chooseRandomQuote = (initial) => {
-    if(initial){
-      return this.props.quotes[Math.floor(Math.random() * this.props.quotes.length)]
+  chooseRandomQuote = initial => {
+    if (initial) {
+      return this.props.quotes[
+        Math.floor(Math.random() * this.props.quotes.length)
+      ];
     }
 
-
-    let {availableQuotes} = this.state;
+    let { availableQuotes } = this.state;
     const index = Math.floor(Math.random() * this.state.availableQuotes.length);
     const quote = availableQuotes[index];
     availableQuotes.splice(index, 1);
 
-    if(availableQuotes.length === 0){
+    if (availableQuotes.length === 0) {
       let newQuotes = JSON.parse(JSON.stringify(this.props.quotes));
       newQuotes.splice(newQuotes.indexOf(quote), 1);
       this.setState({
         availableQuotes: newQuotes
-      })
-    }else{
+      });
+    } else {
       this.setState({
         availableQuotes
       });
@@ -83,57 +101,53 @@ class Slideshow extends React.Component {
     this.props.album[Math.floor(Math.random() * this.props.album.length)];
 
   finishTransition = () => {
-    setTimeout(() => {
-      this.setState(
-        {
-          ...this.state.transitioningTo,
-          transitioningTo: {
-            quote: "",
-            font: "",
-            image: ""
-          },
-          transitioning: false,
-          counter: this.state.counter + 1
+    if (this.state.transitioning) {
+      this.setState({
+        ...this.state.transitioningTo,
+        transitioningTo: {
+          quote: "",
+          font: "",
+          image: ""
         },
-        this.setRandomQuote
-      );
-    }, 1000);
+        transitioning: false,
+        counter: this.state.counter + 1
+      });
+    }
   };
 
   preloadImage = (url, callback) => {
     var img = new Image();
     img.src = url;
     img.onload = callback;
-    img.onerror = this.setRandomQuote();
   };
 
   setRandomQuote = async () => {
-    setTimeout(() => {
-      if (!this.state.transitioning) {
-        const image = this.chooseRandomImage();
-        if (image) {
-          //Pre fetch image
-          this.preloadImage(
-            `${image.baseUrl}=w${image.mediaMetadata.width}-h${
-              image.mediaMetadata.height
-            }`,
-            () => {
-              this.setState(
-                {
+    if (!this.state.transitioning) {
+      setTimeout(() => {
+        if (!this.state.transitioning) {
+          console.log(this.state.counter);
+          const image = this.chooseRandomImage();
+          if (image) {
+            //Pre fetch image
+            this.preloadImage(
+              `${image.baseUrl}=w${image.mediaMetadata.width}-h${
+                image.mediaMetadata.height
+              }`,
+              () => {
+                this.setState({
                   transitioning: true,
                   transitioningTo: {
                     quote: this.chooseRandomQuote(),
                     font: this.chooseRandomFont(),
                     image
                   }
-                },
-                this.finishTransition
-              );
-            }
-          );
+                });
+              }
+            );
+          }
         }
-      }
-    }, 10000);
+      }, 10000);
+    }
   };
 
   componentDidMount = async () => {
@@ -171,7 +185,11 @@ class Slideshow extends React.Component {
   render() {
     return (
       <React.Fragment>
-        <AnimatePresence>
+        <AnimatePresence
+          exitBeforeEnter
+          initial={false}
+          onExitComplete={this.finishTransition}
+        >
           {this.state.image && !this.state.transitioning && (
             <motion.img
               key={`image-${this.state.counter}`}
@@ -179,6 +197,7 @@ class Slideshow extends React.Component {
               initial="initial"
               animate="mounted"
               exit="exit"
+              onAnimationComplete={this.setRandomQuote}
               transition={{ type: "inertia", velocity: 200 }}
               src={`${this.state.image.baseUrl}=w${
                 this.state.image.mediaMetadata.width
@@ -202,9 +221,9 @@ class Slideshow extends React.Component {
             overflow: "hidden"
           }}
         >
-          <AnimatePresence>
+          <AnimatePresence exitBeforeEnter initial={false}>
             {!this.state.transitioning && (
-              <motion.p
+              <motion.div
                 className="quote"
                 key={`quote-${this.state.counter}`}
                 variants={this.quote}
@@ -224,8 +243,15 @@ class Slideshow extends React.Component {
                   fontFamily: this.state.font
                 }}
               >
-                {this.state.quote}
-              </motion.p>
+                {this.state.quote &&
+                  this.state.quote.hasOwnProperty("text") && (
+                    <p>{this.state.quote.text}</p>
+                  )}
+                {this.state.quote &&
+                  this.state.quote.hasOwnProperty("author") && this.state.quote.author !== "" (
+                    <p>- {this.state.quote.author}</p>
+                  )}
+              </motion.div>
             )}
           </AnimatePresence>
         </div>
@@ -480,14 +506,15 @@ class App extends React.Component {
       }).then(function(response) {
         console.log("Response", response);
 
-        reactThis.setState({album: [...reactThis.state.album, ...response.result.mediaItems]});
+        reactThis.setState({
+          album: [...reactThis.state.album, ...response.result.mediaItems]
+        });
 
-        if(response.result.nextPageToken){
+        if (response.result.nextPageToken) {
           reactThis.getAlbum(undefined, response.result.nextPageToken);
-        }else{
+        } else {
           reactThis.setLoading(false);
-          if(callback)
-            callback();
+          if (callback) callback();
         }
       });
     }
@@ -503,12 +530,12 @@ class App extends React.Component {
 
   componentDidMount = async () => {
     let res = await fetch("/quotes");
-    if(res.ok){
+    if (res.ok) {
       this.setState({
         quotes: await res.json()
-      })
+      });
     }
-  }
+  };
 
   render() {
     if (this.state.loading)
@@ -532,7 +559,11 @@ class App extends React.Component {
       return <Login setLoading={this.setLoading} />;
     } else {
       return (
-        <Slideshow album={this.state.album} quotes={this.state.quotes} setLoading={this.setLoading} />
+        <Slideshow
+          album={this.state.album}
+          quotes={this.state.quotes}
+          setLoading={this.setLoading}
+        />
       );
     }
   }
